@@ -26,16 +26,6 @@ const User = sequelize.define("User", {
   },
 });
 
-// ✅ Sync the table with the database
-const createTable = async () => {
-  try {
-    await sequelize.sync({ alter: true }); // Creates or updates the table structure
-    console.log("✅ User table created/updated successfully!");
-  } catch (error) {
-    console.error("❌ Error creating table:", error);
-  }
-};
 
-createTable(); // Call the function to create the table
 
 export default User;
