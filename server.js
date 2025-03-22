@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import sequelize from "./utils/database.js";
 
 import AuthRouter from "./auth/auth.routes.js";
+import QuestionRouter from "./question/question.routes.js";
 
 const app = express();
 
@@ -10,6 +11,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/auth", AuthRouter);
+app.use("/question", QuestionRouter);
 
 sequelize
   .authenticate()
