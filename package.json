@@ -12,10 +12,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-<<<<<<< Updated upstream
-=======
+    "@google/generative-ai": "^0.24.0",
     "bcrypt": "^5.1.1",
->>>>>>> Stashed changes
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.7",

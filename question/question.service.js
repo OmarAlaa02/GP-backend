@@ -1,15 +1,24 @@
 import AppError from "../utils/AppError.js";
 import sequelize from "../utils/database.js";
 import Question from "./question.model.js";
+import Interview from "../interview/interview.model.js";
 
 class QuestionService {
-  async getQuestions(role,duration) {
+  async getQuestions(userId,role,duration) {
     const questionsByDifficulty = {};
     
     
     const limit =this.questionDuration(duration);
-    return await this.getRandomQuestions(role,limit);
+
+    let interview = await Interview.create({
+      user_id : userId,
+      role : role,
+      duration: duration,
+    })
     
+    const questions = await this.getRandomQuestions(role,limit);
+    
+    return {interviewId : interview.interview_id , questions};
     
   }
   
