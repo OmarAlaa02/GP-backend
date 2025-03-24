@@ -14,7 +14,7 @@ app.use(cookieParser());
 
 app.use("/auth", AuthRouter);
 app.use("/question", QuestionRouter);
-app.use("/answer", InterviewRouter);
+app.use("/interview", InterviewRouter);
 
 sequelize
   .authenticate()

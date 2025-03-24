@@ -30,6 +30,10 @@ class QuestionService {
   {
     const difficulties = ["Easy", "Medium", "Hard"];
     let generalQuestions = [],roleQuestions = [];
+    const generalQuestionsByDifficulty = {};
+    const roleQuestionsByDifficulty = {};
+
+
     for (const difficulty of difficulties) {
       const questions = await Question.findAll({
         where: { category: "General Programming", difficulty: difficulty },
@@ -37,7 +41,8 @@ class QuestionService {
         limit: 3,
       });
 
-      generalQuestions = generalQuestions.concat(questions);
+      generalQuestionsByDifficulty [difficulty]=questions;
+
     }
     for (const difficulty of difficulties) {
       const questions = await Question.findAll({
@@ -45,12 +50,11 @@ class QuestionService {
         order: sequelize.literal("RAND()"), // Randomize results
         limit: limitPerDifficulty,
       });
+      roleQuestionsByDifficulty [difficulty]=questions;
 
-      roleQuestions = roleQuestions.concat(questions);
     }
-    var questions =generalQuestions.concat(roleQuestions);
-    
-    return questions.sort((a, b) => a.id - b.id);
+      const finalQuestions={general :generalQuestionsByDifficulty  , role:roleQuestionsByDifficulty }
+    return finalQuestions;
   }
 // summary: 
 // params: role ,duration
