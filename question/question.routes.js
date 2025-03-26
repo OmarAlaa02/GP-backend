@@ -5,4 +5,5 @@ const questionRouter = Router();
 
 questionRouter.get("/", auth.authorize, questionController.getQuestions);
 
+
 export default questionRouter;
