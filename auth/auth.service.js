@@ -49,7 +49,7 @@ class AuthService {
       where: { email: validatedUser.email },
     });
 
-    if (!user) throw new AppError("Invalid credentials", 400);
+    if (!user) throw new AppError("Wrong email or password", 400);
 
     const isPasswordCorrect = await bcrypt.compare(
       validatedUser.password,
