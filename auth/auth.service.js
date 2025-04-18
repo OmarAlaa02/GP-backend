@@ -65,8 +65,8 @@ class AuthService {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "Lax",
+      secure: true,
+      sameSite: "None",
       maxAge: 10 * 60 * 60 * 1000, // 10 hours
     });
 
@@ -75,14 +75,18 @@ class AuthService {
 
   async authorize(req) {
     const token = req.cookies.token;
+    // console.log("token ", token);
     if (!token) throw new AppError("User is not logged in", 401);
 
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({ where: { id: decodedToken.id } });
+    const user = await User.findOne({
+      where: { id: decodedToken.id },
+      attributes: ["id", "firstName", "lastName", "email"],
+    });
     // console.log(user);
     if (!user) throw new AppError("User not found", 404);
-
-    return user;
+    // console.log("auth user: ", user);
+    return user.dataValues;
   }
 }
 

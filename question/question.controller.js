@@ -3,12 +3,18 @@ import questionService from "./question.service.js";
 
 class QuestionController {
   getQuestions = AsyncWrapper(async (req, res, next) => {
-    const interview = await questionService.getQuestions(req.user.id,req.query.role , req.query.duration);
+    const { interviewId, questions } = await questionService.getQuestions(
+      req.user.id,
+      req.query.role,
+      req.query.duration
+    );
     //question?role=frontend
-    res.status(200).json({ interviewId : interview.interviewId,general : interview.questions.general ,role : interview.questions.role});
+    console.log(req.query.role);
+    res.status(200).json({
+      interviewId,
+      questions 
+    });
   });
-
- 
 }
 
 export default new QuestionController();

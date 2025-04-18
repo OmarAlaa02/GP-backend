@@ -2,3 +2,4 @@ node_modules/
 utils/database.js
 .vscode/
 .env
+playground.js
