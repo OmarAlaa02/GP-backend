@@ -13,6 +13,7 @@ class QuestionService {
       user_id: userId,
       role: role,
       duration: duration,
+      score:0
     });
 
     const questions = await this.getRandomQuestions(role, limit);

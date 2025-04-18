@@ -6,6 +6,7 @@ const interviewRouter = Router();
 
 interviewRouter.post("/answer", auth.authorize, interviewController.getAnswers);
 
+// get details of an Interview
 interviewRouter.get("/:interviewId", auth.authorize, interviewController.getInterviewDetails);
 
 // interviewRouter.get("/interviews", auth.authorize, interviewController.getInterviews);
@@ -13,7 +14,7 @@ interviewRouter.get("/:interviewId", auth.authorize, interviewController.getInte
 //interviewRouter.get("/:interviewId", auth.authorize, interviewController.getInterviewInfo);
 
 
-
+//return all onterviews by user
 interviewRouter.get("/", auth.authorize, interviewController.getInterviews);
 
 

@@ -3,13 +3,12 @@ import sequelize from "../utils/database.js";
 import Question from "../question/question.model.js";
 import Interview from "./interview.model.js";
 import InA from "./interview-question.model.js";
-
+import { calculateQuestionScore, calculateInterviewScore } from "./interview-utils.js";
 import { QueryInterface } from "sequelize";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import axios from "axios";
 
-const genAI = new GoogleGenerativeAI("AIzaSyB3POKUT70XjE3vH8cSYO4_lhICzOH-IUM");
 
 async function generateFeedback2(prompt) {
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -39,65 +38,67 @@ async function generateFeedback(question, reference, answer) {
   }
 }
 
+
+
 class InterviewService {
   async getAnswer(interviewId, qId, answer) {
     let reference = await Question.findOne({
       where: { id: qId },
     });
     const questionEntry = await Question.findOne({ where: { id: qId } });
-
+    const questionDiffculty = questionEntry.dataValues.difficulty;
+  
     reference = reference.dataValues.answer || "No reference"; // Adjust field name if needed
     const question = questionEntry.dataValues.question || "No question"; // Same here
 
-    const { feedback, classification } = await generateFeedback(
-      question,
-      reference,
-      answer
+    const { feedback, classification:correctness } = await generateFeedback(
+        question,
+        reference,
+        answer
     );
-    console.log(classification);
-    let score = 0;
-    if (classification.toLocaleLowerCase().includes("partially correct"))
-      score = 5;
-    else if (classification.toLocaleLowerCase().includes("correct")) score = 10;
+    const questionScore = calculateQuestionScore(questionDiffculty,correctness)
+    console.log(feedback,correctness);
 
     const InterQuestEntry = {
       interview_id: interviewId,
       question_id: qId,
       answer: answer,
       feedback,
-      score, // You can update this when your model provides scoring
+      score: questionScore, // You can update this when your model provides scoring
     };
 
     await InA.create(InterQuestEntry);
   }
 
-  async getInterviewInfo(userId, interviewId) {
-    let interview = await Interview.findOne({
-      where: { interview_id: interviewId, user_id: userId },
-    });
-    console.log(interviewId, userId);
-    if (interview.score == null) {
-      // let score = await this.calculateScore(userId, interviewId);
-      // interview.score = score;
-      // interview = await interview.save();
-    }
-    return interview;
-  }
-  //summary:
-  //calculate the score of the interview
-  //return interview
+ 
 
-  async calculateScore(userId, interviewId) {
-    const totalScore = await InA.sum("score", {
-      where: { interview_id: interviewId },
-    });
-
-    return totalScore || 0;
-  }
+  
   async getInterviews(userId) {
     let interviews = await Interview.findAll({
       where: { user_id: userId },
     });
+    for (const interview of interviews) {
+        if (interview.dataValues.score === 0 || interview.dataValues.score === null) {
+          
+          let questionsInfo = await this.getQuestionInfo(interview.dataValues.interview_id)
+          console.log("questionsInfo",questionsInfo)
+          const questionDetails = questionsInfo.map(q => ({
+            question_id: q.question_id,
+            difficulty: q['question.difficulty'],  // because it's nested under the Question model
+            score: q.score,
+          }));
+          const newScore = await calculateInterviewScore(questionDetails); 
+            console.log(newScore)
+          await Interview.update(
+            { score: newScore },
+            { where: { interview_id: interview.interview_id } }
+          );
+    
+          // Optionally update it in memory too, to reflect in the return value
+          interview.score = newScore;
+        }
+      }
+
     const formatedInterviews = interviews.map((interview) => ({
       id: interview.interview_id,
       role: interview.role,
@@ -108,34 +109,63 @@ class InterviewService {
     return formatedInterviews;
   }
 
-  async getInterviewDetails(interviewId) {
-    let interviews = await InA.findAll({
-      attributes: ["answer", "feedback", "score"],
-      where: { interview_id: interviewId },
-      include: [
-        {
-          model: Question,
-          attributes: ["question"],
-          //required: true
-        },
-      ],
+  async getQuestionInfo(interviewId) {
+    console.log("here is getQuestionInfo")
+    let questions = await InA.findAll({
+        attributes: ["question_id","answer", "feedback", "score"],
+        where: { interview_id: interviewId },
+        include: [
+          {
+            model: Question,
+            attributes: ["question", "difficulty"],            //required: true
+          },
+        ],
+  
+        raw: true, // Flatten the nested result
+      });
+    return questions;
+  }
+ 
 
-      raw: true, // Flatten the nested result
-    });
-    // console.log(interviews);
-    let formattedInterviews = interviews.map((entry) => ({
+  async getInterviewDetails(interviewId) {
+    
+    let questionDetails = await this.getQuestionInfo(interviewId) //questionId | question | answer | feedback | questionScore | questionDifficulty
+    console.log(questionDetails);
+    
+  
+     
+    let formattedInterviews = questionDetails.map((entry) => ({
       question: entry["question.question"], // Access question text from join
       answer: entry.answer,
       feedback: entry.feedback,
       score: entry.score,
     }));
-    let interviewInfo = await Interview.findAll({
+    
+    let interviewInfo = await Interview.findOne({
       attributes: ["role", "interview_date", "score"],
       where: { interview_id: interviewId } // Flatten the nested result
     });
+
+    if (interviewInfo.score === 0 || interviewInfo.score === null) {
+        // 👇 Call your own logic to calculate the score
+        let questionsInfo = await this.getQuestionInfo(interviewId)
+        const questionDetails = questionsInfo.map(q => ({
+            question_id: q.question_id,
+            difficulty: q['question.difficulty'],  // because it's nested under the Question model
+            score: q.score,
+          }));
+        const newScore = await calculateInterviewScore(questionDetails); 
+  
+        await Interview.update(
+          { score: newScore },
+          { where: { interview_id: interviewId } }
+        );
+  
+        // Optionally update it in memory too, to reflect in the return value
+        interviewInfo.score = newScore;
+      }
     // console.log(interviewInfo[0].dataValues);
-    const {role,interview_date,score} = interviewInfo[0].dataValues;
-    // console.log(formattedInterviews);
+    const {role,interview_date,score} = interviewInfo;
     // console.log(role);
     return {questions:formattedInterviews ,role,score,date:interview_date.toISOString().split('T')[0]};
   }

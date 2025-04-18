@@ -34,7 +34,6 @@ class interviewController {
   });
 
   getInterviews = AsyncWrapper(async (req, res, next) => {
-    console.log("entered interview controller");
     const interview = await interviewService.getInterviews(req.user.id);
     //question?role=frontend
     res.status(200).json(interview);
