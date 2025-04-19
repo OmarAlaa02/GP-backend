@@ -30,14 +30,14 @@ class QuestionService {
       roleQuestions = [];
     const generalQuestionsByDifficulty = {};
     const roleQuestionsByDifficulty = {};
-
+    //6 9 
     for (const difficulty of difficulties) {
       const questions = await Question.findAll({
         where: { category: ["General Programming" , "Data Structures"], difficulty: difficulty },
         order: sequelize.literal("RAND()"), // Randomize results
         limit: 3,
       });
-
+      
       generalQuestionsByDifficulty[difficulty] = questions;
     }
     for (const difficulty of difficulties) {

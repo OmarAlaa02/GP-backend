@@ -37,7 +37,7 @@ const InterviewQuestion = sequelize.define(
     },
   },
   {
-    timestamps: false,
+    timestamps: true,
   }
 );
 

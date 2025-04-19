@@ -11,7 +11,7 @@ class interviewController {
     console.log("interview Id", req.body.interviewId);
     console.log("question Id", req.body.qId);
     console.log("answer", req.body.answer);
-    res.status(200).json({ message: "answer evaluated succefully !" });
+    res.status(200).json({ qId:req.body.qId ,message: "answer evaluated succefully !" });
   });
 
   getInterviewInfo = AsyncWrapper(async (req, res, next) => {

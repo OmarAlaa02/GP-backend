@@ -18,7 +18,7 @@ async function generateFeedback2(prompt) {
   return response;
 }
 
-const FLASK_API_URL = "https://ea53-34-28-248-24.ngrok-free.app/feedback";
+const FLASK_API_URL = "https://3187-34-44-99-255.ngrok-free.app/feedback";
 
 async function generateFeedback(question, reference, answer) {
   try {
@@ -120,7 +120,7 @@ class InterviewService {
             attributes: ["question", "difficulty"],            //required: true
           },
         ],
-  
+        order: [["createdAt", "ASC"]],
         raw: true, // Flatten the nested result
       });
     return questions;
